@@ -1,0 +1,17 @@
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+
+# Resume parsing
+pdfplumber==0.11.0
+
+# NLP
+spacy==3.7.4
+
+# Authentication
+python-jose==3.3.0
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Optional but recommended
+pydantic==2.6.4

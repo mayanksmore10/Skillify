@@ -1,0 +1,37 @@
+[
+    { "name": "Python", "type": "technical" },
+    { "name": "Java", "type": "technical" },
+    { "name": "C++", "type": "technical" },
+    { "name": "SQL", "type": "technical" },
+    { "name": "NoSQL", "type": "technical" },
+  
+    { "name": "Machine Learning", "type": "technical" },
+    { "name": "Deep Learning", "type": "technical" },
+    { "name": "Data Analysis", "type": "technical" },
+    { "name": "Natural Language Processing", "type": "technical" },
+  
+    { "name": "HTML", "type": "technical" },
+    { "name": "CSS", "type": "technical" },
+    { "name": "JavaScript", "type": "technical" },
+    { "name": "React", "type": "technical" },
+    { "name": "Node.js", "type": "technical" },
+    { "name": "FastAPI", "type": "technical" },
+  
+    { "name": "Git", "type": "tool" },
+    { "name": "GitHub", "type": "tool" },
+    { "name": "Docker", "type": "tool" },
+    { "name": "Postman", "type": "tool" },
+    { "name": "VS Code", "type": "tool" },
+    { "name": "Jupyter Notebook", "type": "tool" },
+    { "name": "Linux", "type": "tool" },
+  
+    { "name": "AWS", "type": "tool" },
+    { "name": "MySQL", "type": "tool" },
+    { "name": "PostgreSQL", "type": "tool" },
+  
+    { "name": "Problem Solving", "type": "soft" },
+    { "name": "Communication", "type": "soft" },
+    { "name": "Teamwork", "type": "soft" },
+    { "name": "Time Management", "type": "soft" }
+  ]
+  
