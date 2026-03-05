@@ -12,11 +12,22 @@ import shutil
 import os
 from utils import hash_password,verify_password
 from starlette.middleware.sessions import SessionMiddleware 
+import httpx
+import asyncio
 
+ADZUNA_APP_ID = "42f1cf26"
+ADZUNA_KEY = "72d57e1bd33c449d57d52046a03d34f7"
+ADZUNA_COUNTRY = "in" # Try 'us', 'gb', or 'in' depending on where you want the data from
 
+# A robust list of skills matching your frontend categories
+SKILLS_TO_TRACK = [
+    "React", "Python", "TypeScript", "AWS", "Docker","javascript","AI","ML","Data Science","Azure","GCP","lambda","mongodb","google cloud"
+    "Kubernetes", "TensorFlow", "Node.js", "Go", "Rust", "SQL", "Figma","Java","C++","C","Linux","Bash"
+]
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="some-random-secret-string")
 models.Base.metadata.create_all(bind=engine)
+
 
 def get_db(): 
     db = SessionLocal() 
@@ -93,7 +104,7 @@ def login_user(
             "error": "Invalid password"
         })
     request.session['user_id'] = user.id
-    return RedirectResponse("/upload-resume", status_code=303)
+    return RedirectResponse("/dashboard", status_code=303)
 
 @app.get("/profile")
 def profile(request: Request, db: Session = Depends(get_db)):
@@ -159,3 +170,76 @@ async def upload_resume(
     db.refresh(user)
 
     return RedirectResponse("/profile", status_code=303)
+
+
+@app.get("/dashboard")
+def dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/api/market-data")
+async def get_market_data():
+    results = []
+
+    # Validation
+    if not ADZUNA_APP_ID or not ADZUNA_KEY:
+        print("❌ ERROR: API Keys are missing in main.py")
+        return [] 
+
+    async with httpx.AsyncClient() as client:
+        tasks = []
+        for skill in SKILLS_TO_TRACK:
+            url = f"https://api.adzuna.com/v1/api/jobs/{ADZUNA_COUNTRY}/search/1"
+            params = {
+                "app_id": ADZUNA_APP_ID,
+                "app_key": ADZUNA_KEY,
+                "what": skill,
+                "content-type": "application/json"
+            }
+            tasks.append(client.get(url, params=params))
+        
+        try:
+            responses = await asyncio.gather(*tasks)
+
+            for skill, response in zip(SKILLS_TO_TRACK, responses):
+                if response.status_code == 200:
+                    data = response.json()
+                    job_count = data.get('count', 0)
+                    
+                    # --- IMPROVED SALARY LOGIC ---
+                    total_salary = 0
+                    salary_samples = 0
+                    
+                    # 1. Check if the root has a 'mean' value (Adzuna sometimes provides this)
+                    if 'mean' in data:
+                        avg_salary = data['mean']
+                    else:
+                        # 2. If not, calculate from individual job results
+                        for job in data.get('results', []):
+                            # Case A: Min and Max both exist -> Take average
+                            if 'salary_min' in job and 'salary_max' in job:
+                                total_salary += (job['salary_min'] + job['salary_max']) / 2
+                                salary_samples += 1
+                            # Case B: Only Min exists
+                            elif 'salary_min' in job:
+                                total_salary += job['salary_min']
+                                salary_samples += 1
+                            # Case C: Only Max exists
+                            elif 'salary_max' in job:
+                                total_salary += job['salary_max']
+                                salary_samples += 1
+                        
+                        avg_salary = (total_salary / salary_samples) if salary_samples > 0 else 0
+                    
+                    results.append({
+                        "name": skill,
+                        "jobs": job_count,
+                        "salary": avg_salary
+                    })
+                else:
+                    results.append({"name": skill, "jobs": 0, "salary": 0})
+        
+        except Exception as e:
+            print(f"❌ Critical Connection Error: {e}")
+            return []
+
+    return results
